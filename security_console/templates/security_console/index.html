@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HostShield · УБИ.099</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; background: #f3f7f9; color: #183144; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #103f59; color: white; padding: 24px max(24px, calc((100vw - 1120px)/2)); }
+    header strong { font-size: 24px; }
+    header span { display: block; color: #bfdde8; margin-top: 4px; }
+    main { max-width: 1120px; margin: 0 auto; padding: 34px 24px 64px; }
+    h1 { font-size: clamp(30px, 4vw, 48px); margin: 0 0 12px; line-height: 1.15; }
+    h2 { font-size: 24px; margin: 0 0 16px; }
+    p { line-height: 1.6; }
+    .lead { max-width: 820px; color: #536d7a; font-size: 19px; }
+    .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; margin-top: 32px; }
+    .panel { background: white; border: 1px solid #d8e5ea; border-radius: 14px; padding: 26px; box-shadow: 0 8px 26px #123b5310; }
+    .scenario { display: grid; gap: 11px; }
+    form { margin: 0; }
+    button { width: 100%; text-align: left; border: 1px solid #c9dce4; background: #f7fbfc; border-radius: 9px; padding: 14px 16px; color: #16445b; font: inherit; font-weight: 650; cursor: pointer; }
+    button:hover, button:focus-visible { border-color: #08739d; background: #e8f5fa; }
+    .status { display: inline-block; border-radius: 100px; padding: 7px 14px; font-weight: 700; background: #e5f5ec; color: #19704c; }
+    .status.alert { background: #fae8e5; color: #a4342d; }
+    .metric { font-size: 64px; font-weight: 800; line-height: 1; color: #0f6487; margin: 16px 0 6px; }
+    .label { color: #607684; }
+    dl { display: grid; grid-template-columns: 145px 1fr; gap: 10px 14px; margin: 25px 0 0; }
+    dt { color: #627986; } dd { margin: 0; font-weight: 650; }
+    .flow { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 26px; }
+    .flow span { border: 1px solid #bed5de; border-radius: 7px; padding: 10px 12px; background: white; font-weight: 650; }
+    .flow b { color: #11749a; }
+    .note { border-left: 4px solid #e1a951; padding: 11px 17px; background: #fffaf0; margin-top: 28px; color: #665331; }
+    footer { margin-top: 28px; color: #637b87; font-size: 14px; }
+    @media(max-width: 780px) { .grid { grid-template-columns: 1fr; } dl { grid-template-columns: 120px 1fr; } }
+  </style>
+</head>
+<body>
+<header><strong>HostShield</strong><span>Демонстрация компонента security-service · УБИ.099</span></header>
+<main>
+  <h1>Обнаружение попыток выявить внутренние хосты</h1>
+  <p class="lead">Компонент из технического задания анализирует запрещённые сетевые события. Он считает уникальные адреса назначения для одного источника и зоны за скользящее окно в 10 секунд.</p>
+  <div class="grid">
+    <section class="panel">
+      <h2>Проверить сценарий</h2>
+      <div class="scenario">
+        <form method="post" action="{% url 'run_scenario' 'normal' %}">{% csrf_token %}<button type="submit">Штатный HTTPS-запрос пользователя</button></form>
+        <form method="post" action="{% url 'run_scenario' 'external' %}">{% csrf_token %}<button type="submit">S1 · Сканирование из внешней сети</button></form>
+        <form method="post" action="{% url 'run_scenario' 'guest' %}">{% csrf_token %}<button type="submit">S2 · Сканирование из гостевого сегмента</button></form>
+        <form method="post" action="{% url 'run_scenario' 'repeat' %}">{% csrf_token %}<button type="submit">Контроль · Повторные пакеты к одному хосту</button></form>
+      </div>
+    </section>
+    <section class="panel" aria-live="polite">
+      <h2>{{ result.title }}</h2>
+      <span class="status {% if result.suspicious %}alert{% endif %}">{% if result.suspicious %}Подозрительная разведка{% else %}Порог не достигнут{% endif %}</span>
+      <div class="metric">{{ result.unique_hosts }} / 20</div>
+      <div class="label">уникальных запрещённых назначений · порог H ≥ 20</div>
+      <p>{{ result.description }}</p>
+      <dl>
+        <dt>Источник</dt><dd>{{ result.source }}</dd>
+        <dt>Входная зона</dt><dd>{{ result.zone }}</dd>
+        <dt>Событий</dt><dd>{{ result.events }}</dd>
+        <dt>Решение</dt><dd>{{ result.action }}</dd>
+      </dl>
+    </section>
+  </div>
+  <div class="flow" aria-label="Схема обработки"><span>Клиент / нарушитель</span><b>→</b><span>Сенсор и МЭ</span><b>→</b><span>security-service</span><b>→</b><span>Решение и аудит</span></div>
+  <p class="note"><strong>Граница демонстрации.</strong> События сценариев заданы заранее; реальное сканирование и применение правил МЭ здесь не выполняются. Вывод «временное правило» — проектное решение алгоритма, а не подтверждение блокировки трафика.</p>
+  <footer>Основа: ТЗ HostShield, F04–F05. Порог 20 адресов / 10 секунд и TTL 300 секунд — параметры учебного стенда.</footer>
+</main>
+</body>
+</html>
