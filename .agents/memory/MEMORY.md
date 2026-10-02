@@ -1,0 +1,1 @@
+- [Python package installation](python-packages.md) — the imported base Python runtime needs user-scoped pip installation on Replit.

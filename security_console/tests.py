@@ -1,4 +1,4 @@
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 
 from .detector import Probe, evaluate
@@ -20,6 +20,8 @@ class DetectorTests(SimpleTestCase):
         self.assertEqual(result.unique_hosts, 1)
         self.assertFalse(result.suspicious)
 
+
+class DashboardTests(TestCase):
     def test_page_and_scenario(self):
         self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
         self.client.post(reverse("run_scenario", args=["external"]))

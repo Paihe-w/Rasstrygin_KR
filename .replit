@@ -1,5 +1,39 @@
-run = "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+run = "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:5000"
+modules = ["python-base-3.13"]
 
 [[ports]]
-localPort = 8000
+localPort = 5000
 externalPort = 80
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.development]
+PIP_BREAK_SYSTEM_PACKAGES = "1"
+PIP_USER = "1"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:5000"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
